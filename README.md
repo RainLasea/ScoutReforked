@@ -1,5 +1,5 @@
 # ScoutReforked
-![logo](https://github.com/RainLasea/ScoutReforked/blob/main/.assets/Scout.png?raw=true)
+![logo](https://raw.githubusercontent.com/RainLasea/ScoutReforked/refs/heads/main/.assets/Scout.png)
 <h4 align="center">
 <a href="https://github.com/RainLasea/TerraFirmaCraft_Remake/blob/main/LICENSE"><img src="https://img.shields.io/badge/MIT_LICENSE-green"></a>
 <img src="https://img.shields.io/badge/For_MC-1.20.1-orange">
