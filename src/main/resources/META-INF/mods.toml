@@ -1,7 +1,7 @@
 modLoader = "javafml"
 loaderVersion = "${loader_version_range}"
 license = "${mod_license}"
-logoFile="assets/${mod_id}/textures/gui/icon.png"
+logoFile="assets/${mod_id}/textures/gui/logo.png"
 logoBlur=false
 [[mods]]
 modId = "${mod_id}"
