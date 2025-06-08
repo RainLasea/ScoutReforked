@@ -1,0 +1,20 @@
+{
+    "parent": "minecraft:recipes/root",
+    "criteria": {
+      "has_iron": {
+        "trigger": "minecraft:inventory_changed",
+        "conditions": {
+          "items": [
+            {
+              "tag": "forge:leather"
+            }
+          ]
+        }
+      }
+    },
+    "rewards": {
+      "recipes": [
+        "scoutreforked:satchel"
+      ]
+    }
+}

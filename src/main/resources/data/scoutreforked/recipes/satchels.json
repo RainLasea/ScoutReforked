@@ -1,0 +1,21 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+      "  S",
+      "LL ",
+      "LL "
+    ],
+    "key": {
+      "L": {
+        "tag": "forge:leather"
+      },
+      "S": {
+        "item": "minecraft:string"
+      }
+    },
+    "result": {
+      "item": "scoutreforked:satchel",
+      "count": 1
+    }
+  }
+  
