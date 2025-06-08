@@ -9,25 +9,38 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import top.theillusivec4.curios.api.client.CuriosRendererRegistry;
+import top.theillusivec4.curios.api.client.ICurioRenderer;
 
 @Mod(scoutreforked.MODID)
 public class scoutreforked {
     public static final String MODID = "scoutreforked";
 
-    @SuppressWarnings("removal")
     public scoutreforked() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
-        MinecraftForge.EVENT_BUS.register(this);
+
         ModItems.register(modEventBus);
         ModCreativeModTabs.register(modEventBus);
+
         modEventBus.addListener(this::clientSetup);
         modEventBus.addListener(this::addCreative);
+        modEventBus.addListener(this::onCommonSetup);
+
+        MinecraftForge.EVENT_BUS.register(this);
+    }
+
+    private void onCommonSetup(FMLCommonSetupEvent event) {
     }
 
     private void clientSetup(final FMLClientSetupEvent evt) {
-        CuriosRendererRegistry.register(ModItems.SATCHEL.get(), () -> new SatchelCurioRenderer());
+        if (SatchelCurioRenderer.isCuriosLoaded()) {
+            CuriosRendererRegistry.register(
+                    ModItems.SATCHEL.get(),
+                    () -> (ICurioRenderer) SatchelCurioRenderer.getSatchelRenderer().get()
+            );
+        }
     }
 
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
@@ -38,6 +51,5 @@ public class scoutreforked {
 
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
-        // 服务器启动逻辑
     }
 }
