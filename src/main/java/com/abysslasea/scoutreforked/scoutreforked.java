@@ -1,10 +1,7 @@
-package com.abysslasea;
+package com.abysslasea.scoutreforked;
 
-import com.abysslasea.item.ModItems;
-import com.mojang.logging.LogUtils;
-import net.minecraft.client.Minecraft;
-import net.minecraft.world.item.CreativeModeTabs;
-import net.minecraftforge.api.distmarker.Dist;
+import com.abysslasea.scoutreforked.Curio.SatchelCurioRenderer;
+import com.abysslasea.scoutreforked.item.ModItems;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
@@ -13,37 +10,34 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import org.slf4j.Logger;
+import top.theillusivec4.curios.api.client.CuriosRendererRegistry;
 
 @Mod(scoutreforked.MODID)
 public class scoutreforked {
     public static final String MODID = "scoutreforked";
-    private static final Logger LOGGER = LogUtils.getLogger();
 
+    @SuppressWarnings("removal")
     public scoutreforked() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
-        ModItems.rgeister(modEventBus);
         MinecraftForge.EVENT_BUS.register(this);
-
+        ModItems.register(modEventBus);
+        ModCreativeModTabs.register(modEventBus);
+        modEventBus.addListener(this::clientSetup);
         modEventBus.addListener(this::addCreative);
     }
 
+    private void clientSetup(final FMLClientSetupEvent evt) {
+        CuriosRendererRegistry.register(ModItems.SATCHEL.get(), () -> new SatchelCurioRenderer());
+    }
+
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
-        if (event.getTabKey() == CreativeModeTabs.INGREDIENTS) {
-            event.accept(ModItems.SATCHELS);
+        if (event.getTabKey() == ModCreativeModTabs.SCOUT_TAB.getKey()) {
+            event.accept(ModItems.SATCHEL.get());
         }
     }
 
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
-    }
-    @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
-    public static class ClientModEvents {
-
-        @SubscribeEvent
-        public static void onClientSetup(FMLClientSetupEvent event) {
-            LOGGER.info("HELLO FROM CLIENT SETUP");
-            LOGGER.info("MINECRAFT NAME >> {}", Minecraft.getInstance().getUser().getName());
-        }
+        // 服务器启动逻辑
     }
 }

@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "scoutreforked:item/satchels"
+    "layer0": "scoutreforked:item/satchel"
   }
 }
