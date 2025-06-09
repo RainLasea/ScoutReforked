@@ -86,25 +86,23 @@ public class SatchelArmorItem extends ArmorItem implements GeoItem {
             @Override
             public CompoundTag serializeNBT() {
                 CompoundTag tag = new CompoundTag();
-                tag.put("Items", itemHandler.serializeNBT());
+                tag.put("Inventory", itemHandler.serializeNBT());
                 return tag;
             }
 
             @Override
             public void deserializeNBT(CompoundTag nbt) {
-                if (nbt.contains("Items"))
-                    itemHandler.deserializeNBT(nbt.getCompound("Items"));
+                if (nbt.contains("Inventory"))
+                    itemHandler.deserializeNBT(nbt.getCompound("Inventory"));
             }
         };
     }
-
 
     @Nullable
     public static IItemHandler getItemHandler(ItemStack stack) {
         return stack.getCapability(ForgeCapabilities.ITEM_HANDLER)
                 .orElse(null);
     }
-
 
     public ICurio getCurio(ItemStack stack) {
         return new SatchelCurioWrapperItem(stack);
@@ -114,13 +112,17 @@ public class SatchelArmorItem extends ArmorItem implements GeoItem {
         private final ItemStack stack;
 
         public SatchelItemHandler(ItemStack stack) {
-            super(6); // 可配置的格子数，例如 6 格
+            super(9);
             this.stack = stack;
-            deserializeNBT(stack.getOrCreateTag().getCompound("Inventory"));
+            CompoundTag tag = stack.getOrCreateTag();
+            if (tag.contains("Inventory")) {
+                deserializeNBT(tag.getCompound("Inventory"));
+            }
         }
 
         @Override
         protected void onContentsChanged(int slot) {
+            super.onContentsChanged(slot);
             CompoundTag tag = stack.getOrCreateTag();
             tag.put("Inventory", serializeNBT());
         }

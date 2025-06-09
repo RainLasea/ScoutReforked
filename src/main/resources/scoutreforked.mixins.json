@@ -4,7 +4,9 @@
   "package": "com.abysslasea.scoutreforked.InventorySlot",
   "compatibilityLevel": "JAVA_8",
   "refmap": "scoutreforked.refmap.json",
-  "mixins": [],
+  "mixins": [
+    "InventoryMenuMixin"
+  ],
   "client": [
     "InventoryScreenMixin"
   ],

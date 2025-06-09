@@ -23,7 +23,7 @@ ordering = "NONE"
 side = "BOTH"
 [[dependencies."${mod_id}"]]
 modId="curios"
-mandatory=false
+mandatory=true
 versionRange="[5.8.0+1.20.1,)"
 ordering="NONE"
 side="BOTH"

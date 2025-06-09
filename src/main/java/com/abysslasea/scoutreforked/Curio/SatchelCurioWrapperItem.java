@@ -1,19 +1,14 @@
 package com.abysslasea.scoutreforked.Curio;
 
+import com.abysslasea.scoutreforked.item.SatchelArmorItem;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.event.entity.living.LivingEquipmentChangeEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import top.theillusivec4.curios.api.CuriosCapability;
 import top.theillusivec4.curios.api.SlotContext;
 import top.theillusivec4.curios.api.type.capability.ICurio;
 
 import java.util.stream.IntStream;
 
-@Mod.EventBusSubscriber(modid = "scoutreforked", bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class SatchelCurioWrapperItem implements ICurio {
     private final ItemStack stack;
 
@@ -21,51 +16,34 @@ public class SatchelCurioWrapperItem implements ICurio {
         this.stack = stack;
     }
 
+    /**
+     * 只要玩家在胸甲槽或任何 Curios 槽已有一个 SatchelArmorItem，就禁止再次装备。
+     */
     @Override
     public boolean canEquip(SlotContext context) {
         LivingEntity entity = context.entity();
-        ItemStack chestStack = entity.getItemBySlot(EquipmentSlot.CHEST);
-        return chestStack.isEmpty() || !ItemStack.isSameItemSameTags(chestStack, stack);
-    }
 
-    @Override
-    public boolean canUnequip(SlotContext context) {
-        return true;
-    }
-
-    @Override
-    public boolean canRightClickEquip() {
-        return true;
-    }
-    @SubscribeEvent
-    public static void onArmorEquip(LivingEquipmentChangeEvent event) {
-        if (event.getSlot() == EquipmentSlot.CHEST) {
-            LivingEntity entity = event.getEntity();
-            ItemStack newItem = event.getTo();
-
-            if (!newItem.isEmpty() && newItem.getItem() instanceof net.minecraft.world.item.ArmorItem) {
-                boolean hasSameInCurios = entity.getCapability(CuriosCapability.INVENTORY)
-                        .map(curiosHandler -> {
-                            return curiosHandler.getCurios().values().stream()
-                                    .flatMap(handler -> IntStream.range(0, handler.getStacks().getSlots())
-                                            .mapToObj(handler.getStacks()::getStackInSlot))
-                                    .anyMatch(stack -> !stack.isEmpty() && ItemStack.isSameItemSameTags(stack, newItem));
-                        }).orElse(false);
-
-                if (hasSameInCurios) {
-
-                    entity.setItemSlot(EquipmentSlot.CHEST, event.getFrom());
-
-                    if (entity instanceof Player player) {
-                        ItemStack rejected = newItem.copy();
-                        if (!player.getInventory().add(rejected)) {
-                            player.drop(rejected, false);
-                        }
-                    }
-                }
-            }
+        // 1. 胸甲槽检查
+        ItemStack chest = entity.getItemBySlot(EquipmentSlot.CHEST);
+        if (chest.getItem() instanceof SatchelArmorItem) {
+            return false;
         }
+
+        // 2. Curios 插槽检查
+        return entity.getCapability(top.theillusivec4.curios.api.CuriosCapability.INVENTORY)
+                .map(curios -> curios.getCurios().values().stream()
+                        .flatMap(handler -> {
+                            var stacks = handler.getStacks();
+                            return IntStream.range(0, stacks.getSlots())
+                                    .mapToObj(stacks::getStackInSlot);
+                        })
+                        // 过滤掉当前这只“正要装备”的挎包
+                        .filter(s -> !s.isEmpty() && s != this.stack)
+                        // 确保其余插槽没有任何 SatchelArmorItem
+                        .noneMatch(s -> s.getItem() instanceof SatchelArmorItem)
+                ).orElse(true);
     }
+
     @Override
     public ItemStack getStack() {
         return this.stack;
