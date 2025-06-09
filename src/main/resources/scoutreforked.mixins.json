@@ -1,13 +1,12 @@
-
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "com.abysslasea.mixin",
+  "package": "com.abysslasea.scoutreforked.InventorySlot",
   "compatibilityLevel": "JAVA_8",
   "refmap": "scoutreforked.refmap.json",
-  "mixins": [
-  ],
+  "mixins": [],
   "client": [
+    "InventoryScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

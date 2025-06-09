@@ -12,9 +12,12 @@ import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.animatable.GeoItem;
@@ -24,7 +27,6 @@ import software.bernie.geckolib.core.animation.AnimatableManager;
 import software.bernie.geckolib.core.animation.AnimationController;
 import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
-import top.theillusivec4.curios.api.CuriosApi;
 import top.theillusivec4.curios.api.CuriosCapability;
 import top.theillusivec4.curios.api.type.capability.ICurio;
 
@@ -67,29 +69,60 @@ public class SatchelArmorItem extends ArmorItem implements GeoItem {
     @Override
     public @Nullable ICapabilityProvider initCapabilities(ItemStack stack, @Nullable CompoundTag nbt) {
         return new ICapabilitySerializable<CompoundTag>() {
-            private final LazyOptional<ICurio> curioCap = LazyOptional.of(() -> new SatchelCurioWrapperItem(stack));
+
+            private final SatchelItemHandler itemHandler = new SatchelItemHandler(stack);
+            private final LazyOptional<IItemHandler> itemOpt = LazyOptional.of(() -> itemHandler);
+            private final LazyOptional<ICurio> curioOpt = LazyOptional.of(() -> new SatchelCurioWrapperItem(stack));
 
             @Override
             public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
-                // 使用 Curios 混合的能力提供方式
-                if (cap == CuriosCapability.ITEM) {
-                    return curioCap.cast();
-                }
+                if (cap == ForgeCapabilities.ITEM_HANDLER)
+                    return itemOpt.cast();
+                if (cap == CuriosCapability.ITEM)
+                    return curioOpt.cast();
                 return LazyOptional.empty();
             }
 
             @Override
             public CompoundTag serializeNBT() {
-                return new CompoundTag();
+                CompoundTag tag = new CompoundTag();
+                tag.put("Items", itemHandler.serializeNBT());
+                return tag;
             }
 
             @Override
             public void deserializeNBT(CompoundTag nbt) {
+                if (nbt.contains("Items"))
+                    itemHandler.deserializeNBT(nbt.getCompound("Items"));
             }
         };
     }
-    public ICurio getCurio(ItemStack stack) {
-        return new SatchelCurioWrapperItem(stack); // 这个类实现 ICurio，不是 ICurioItem
+
+
+    @Nullable
+    public static IItemHandler getItemHandler(ItemStack stack) {
+        return stack.getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .orElse(null);
     }
 
+
+    public ICurio getCurio(ItemStack stack) {
+        return new SatchelCurioWrapperItem(stack);
+    }
+
+    public static class SatchelItemHandler extends ItemStackHandler {
+        private final ItemStack stack;
+
+        public SatchelItemHandler(ItemStack stack) {
+            super(6); // 可配置的格子数，例如 6 格
+            this.stack = stack;
+            deserializeNBT(stack.getOrCreateTag().getCompound("Inventory"));
+        }
+
+        @Override
+        protected void onContentsChanged(int slot) {
+            CompoundTag tag = stack.getOrCreateTag();
+            tag.put("Inventory", serializeNBT());
+        }
+    }
 }

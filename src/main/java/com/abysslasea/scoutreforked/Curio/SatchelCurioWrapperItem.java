@@ -21,7 +21,6 @@ public class SatchelCurioWrapperItem implements ICurio {
         this.stack = stack;
     }
 
-    // 饰品槽装备时检测胸甲槽是否有同款，阻止重复
     @Override
     public boolean canEquip(SlotContext context) {
         LivingEntity entity = context.entity();
@@ -54,10 +53,9 @@ public class SatchelCurioWrapperItem implements ICurio {
                         }).orElse(false);
 
                 if (hasSameInCurios) {
-                    // 恢复之前的胸甲装备，阻止新装备生效
+
                     entity.setItemSlot(EquipmentSlot.CHEST, event.getFrom());
 
-                    // 放回玩家背包或丢弃，避免物品消失
                     if (entity instanceof Player player) {
                         ItemStack rejected = newItem.copy();
                         if (!player.getInventory().add(rejected)) {
