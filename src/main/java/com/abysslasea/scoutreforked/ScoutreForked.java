@@ -14,12 +14,12 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import top.theillusivec4.curios.api.client.CuriosRendererRegistry;
 import top.theillusivec4.curios.api.client.ICurioRenderer;
 
-@Mod(scoutreforked.MODID)
-public class scoutreforked {
+@Mod(ScoutreForked.MODID)
+public class ScoutreForked {
     public static final String MODID = "scoutreforked";
 
-    public scoutreforked() {
-        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+    public ScoutreForked(FMLJavaModLoadingContext context) {
+        IEventBus modEventBus = context.getModEventBus();
 
         ModItems.register(modEventBus);
         ModCreativeModTabs.register(modEventBus);

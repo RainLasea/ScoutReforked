@@ -11,7 +11,7 @@ import net.minecraftforge.registries.RegistryObject;
 
 public class ModCreativeModTabs {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MOD_TABS =
-            DeferredRegister.create(Registries.CREATIVE_MODE_TAB, scoutreforked.MODID); // 注意这里改为 ScoutReforked.MOD_ID
+            DeferredRegister.create(Registries.CREATIVE_MODE_TAB, ScoutreForked.MODID); // 注意这里改为 ScoutReforked.MOD_ID
 
     public static final RegistryObject<CreativeModeTab> SCOUT_TAB = CREATIVE_MOD_TABS.register("scoutreforked_tab",
             () -> CreativeModeTab.builder()
