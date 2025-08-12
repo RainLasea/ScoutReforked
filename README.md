@@ -3,6 +3,8 @@
 <h4 align="center">
 <a href="https://github.com/RainLasea/TerraFirmaCraft_Remake/blob/main/LICENSE"><img src="https://img.shields.io/badge/MIT_LICENSE-green"></a>
 <img src="https://img.shields.io/badge/For_MC-1.20.1-orange">
+<a href="https://www.curseforge.com/minecraft/mc-mods/scoutreforked"><img src="https://cf.way2muchnoise.eu/full_1283433_downloads.svg" alt="Curseforge Downloads"></a>
+<a href="https://modrinth.com/mod/scoutreforked"><img src="https://img.shields.io/modrinth/dt/scoutreforked?style=flat&logo=modrinth&logoColor=gray&label=downloads:&labelColor=00c853&color=808080" alt="modrinth Downloads"></a>
 </h4>
 
 A mod focused on *physically* extending the inventory (adding slots) through wearing various types of bags.  
