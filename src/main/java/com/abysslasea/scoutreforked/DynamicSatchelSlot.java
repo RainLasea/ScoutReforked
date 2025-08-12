@@ -1,15 +1,12 @@
 package com.abysslasea.scoutreforked;
 
+import com.abysslasea.scoutreforked.Curio.CuriosCompat;
 import com.abysslasea.scoutreforked.item.SatchelArmorItem;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.SlotItemHandler;
-import top.theillusivec4.curios.api.CuriosCapability;
-import top.theillusivec4.curios.api.type.capability.ICuriosItemHandler;
-import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
 
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -46,21 +43,19 @@ public class DynamicSatchelSlot extends SlotItemHandler {
             return SatchelArmorItem.getItemHandler(chestStack);
         }
 
-        LazyOptional<ICuriosItemHandler> optional = player.getCapability(CuriosCapability.INVENTORY);
-        if (!optional.isPresent()) return null;
+        if (!CuriosCompat.isCuriosLoaded()) return null;
 
-        ICuriosItemHandler curiosHandler = optional.orElse(null);
+        Object curiosHandler = CuriosCompat.getCuriosCapability(player);
         if (curiosHandler == null) return null;
 
-        Map<String, ICurioStacksHandler> curios = curiosHandler.getCurios();
-        if (curios == null) return null;
+        Map<String, Object> curiosMap = CuriosCompat.getCurios(curiosHandler);
+        if (curiosMap == null) return null;
 
-        return curios.values().stream()
-                .flatMap(h -> {
-                    IItemHandler stacks = h.getStacks();
-                    return IntStream.range(0, stacks.getSlots())
-                            .mapToObj(stacks::getStackInSlot);
-                })
+        return curiosMap.values().stream()
+                .map(CuriosCompat::getStacksHandler)
+                .filter(Objects::nonNull)
+                .flatMap(stacks -> IntStream.range(0, stacks.getSlots())
+                        .mapToObj(stacks::getStackInSlot))
                 .filter(stack -> !stack.isEmpty() && stack.getItem() instanceof SatchelArmorItem)
                 .map(SatchelArmorItem::getItemHandler)
                 .filter(Objects::nonNull)

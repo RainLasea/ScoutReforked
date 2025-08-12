@@ -1,18 +1,18 @@
 package com.abysslasea.scoutreforked;
 
-import com.abysslasea.scoutreforked.Curio.SatchelCurioRenderer;
 import com.abysslasea.scoutreforked.item.ModItems;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import top.theillusivec4.curios.api.client.CuriosRendererRegistry;
-import top.theillusivec4.curios.api.client.ICurioRenderer;
 
 @Mod(ScoutreForked.MODID)
 public class ScoutreForked {
@@ -29,17 +29,19 @@ public class ScoutreForked {
         modEventBus.addListener(this::onCommonSetup);
 
         MinecraftForge.EVENT_BUS.register(this);
+
+        if (ModList.get().isLoaded("curios")) {
+            com.abysslasea.scoutreforked.Curio.CuriosCompat.init();
+        }
     }
 
     private void onCommonSetup(FMLCommonSetupEvent event) {
     }
 
     private void clientSetup(final FMLClientSetupEvent evt) {
-        if (SatchelCurioRenderer.isCuriosLoaded()) {
-            CuriosRendererRegistry.register(
-                    ModItems.SATCHEL.get(),
-                    () -> (ICurioRenderer) SatchelCurioRenderer.getSatchelRenderer().get()
-            );
+        if (ModList.get().isLoaded("curios")) {
+            EntityModelSet modelSet = Minecraft.getInstance().getEntityModels();
+            com.abysslasea.scoutreforked.Curio.CuriosCompat.clientInit(modelSet);
         }
     }
 

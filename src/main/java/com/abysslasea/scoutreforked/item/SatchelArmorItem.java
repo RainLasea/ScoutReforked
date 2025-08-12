@@ -1,8 +1,9 @@
 package com.abysslasea.scoutreforked.item;
 
-import com.abysslasea.scoutreforked.Curio.SatchelCurioWrapperItem;
 import com.abysslasea.scoutreforked.armor.SatchelArmorRenderer;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -16,52 +17,58 @@ import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import software.bernie.geckolib.animatable.GeoItem;
-import software.bernie.geckolib.animatable.SingletonGeoAnimatable;
-import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.core.animation.AnimatableManager;
-import software.bernie.geckolib.core.animation.AnimationController;
-import software.bernie.geckolib.core.object.PlayState;
-import software.bernie.geckolib.util.GeckoLibUtil;
-import top.theillusivec4.curios.api.CuriosCapability;
-import top.theillusivec4.curios.api.type.capability.ICurio;
 
 import java.util.function.Consumer;
 
-public class SatchelArmorItem extends ArmorItem implements GeoItem {
-    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
+public class SatchelArmorItem extends ArmorItem {
 
     public SatchelArmorItem(ArmorMaterial material, Type type, Properties properties) {
         super(material, type, properties);
-        SingletonGeoAnimatable.registerSyncedAnimatable(this);
-    }
-
-    @Override
-    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, state -> PlayState.STOP));
-    }
-
-    @Override
-    public AnimatableInstanceCache getAnimatableInstanceCache() {
-        return this.cache;
     }
 
     @Override
     public void initializeClient(Consumer<IClientItemExtensions> consumer) {
         consumer.accept(new IClientItemExtensions() {
-            private SatchelArmorRenderer renderer;
-
             @Override
-            public @NotNull HumanoidModel<?> getHumanoidArmorModel(LivingEntity entity, ItemStack stack, EquipmentSlot slot, HumanoidModel<?> original) {
-                if (renderer == null) {
-                    renderer = new SatchelArmorRenderer();
+            public @Nullable HumanoidModel<?> getHumanoidArmorModel(LivingEntity livingEntity, ItemStack itemStack, EquipmentSlot equipmentSlot, HumanoidModel<?> original) {
+                EntityModelSet modelSet = Minecraft.getInstance().getEntityModels();
+                SatchelArmorRenderer renderer = new SatchelArmorRenderer(modelSet);
+
+                // 安全地复制属性
+                if (original != null) {
+                    try {
+                        // 使用类型转换来解决泛型问题
+                        @SuppressWarnings("unchecked")
+                        HumanoidModel<LivingEntity> originalTyped = (HumanoidModel<LivingEntity>) original;
+                        originalTyped.copyPropertiesTo(renderer);
+                    } catch (ClassCastException e) {
+                        // 如果类型转换失败，手动复制关键属性
+                        copyBasicProperties(original, renderer);
+                    } catch (Exception e) {
+                        // 其他异常的静默处理
+                    }
                 }
-                renderer.prepForRender(entity, stack, slot, original);
+
                 return renderer;
+            }
+
+            // 手动复制基础属性的方法
+            private void copyBasicProperties(HumanoidModel<?> from, HumanoidModel<LivingEntity> to) {
+                try {
+                    to.attackTime = from.attackTime;
+                    to.riding = from.riding;
+                    to.young = from.young;
+                    to.crouching = from.crouching;
+                    to.leftArmPose = from.leftArmPose;
+                    to.rightArmPose = from.rightArmPose;
+                } catch (Exception e) {
+                    // 静默处理任何属性复制错误
+                }
             }
         });
     }
@@ -69,17 +76,25 @@ public class SatchelArmorItem extends ArmorItem implements GeoItem {
     @Override
     public @Nullable ICapabilityProvider initCapabilities(ItemStack stack, @Nullable CompoundTag nbt) {
         return new ICapabilitySerializable<CompoundTag>() {
-
             private final SatchelItemHandler itemHandler = new SatchelItemHandler(stack);
             private final LazyOptional<IItemHandler> itemOpt = LazyOptional.of(() -> itemHandler);
-            private final LazyOptional<ICurio> curioOpt = LazyOptional.of(() -> new SatchelCurioWrapperItem(stack));
+            private final LazyOptional<Object> curioOpt = createCurioOptional(stack);
 
             @Override
             public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
-                if (cap == ForgeCapabilities.ITEM_HANDLER)
+                if (cap == ForgeCapabilities.ITEM_HANDLER) {
                     return itemOpt.cast();
-                if (cap == CuriosCapability.ITEM)
-                    return curioOpt.cast();
+                }
+                if (ModList.get().isLoaded("curios")) {
+                    try {
+                        Class<?> curiosCapClass = Class.forName("top.theillusivec4.curios.api.CuriosCapability");
+                        Object curiosCap = curiosCapClass.getField("ITEM").get(null);
+                        if (cap == curiosCap) {
+                            return curioOpt.cast();
+                        }
+                    } catch (Exception ignored) {
+                    }
+                }
                 return LazyOptional.empty();
             }
 
@@ -92,8 +107,24 @@ public class SatchelArmorItem extends ArmorItem implements GeoItem {
 
             @Override
             public void deserializeNBT(CompoundTag nbt) {
-                if (nbt.contains("Inventory"))
+                if (nbt.contains("Inventory")) {
                     itemHandler.deserializeNBT(nbt.getCompound("Inventory"));
+                }
+            }
+
+            private LazyOptional<Object> createCurioOptional(ItemStack stack) {
+                if (ModList.get().isLoaded("curios")) {
+                    try {
+                        Class<?> wrapperClass = Class.forName("com.abysslasea.scoutreforked.Curio.SatchelCurioWrapperItem");
+                        Object wrapperInstance = wrapperClass.getConstructor(ItemStack.class).newInstance(stack);
+                        if (wrapperInstance != null) {
+                            return LazyOptional.of(() -> wrapperInstance);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                return LazyOptional.empty();
             }
         };
     }
@@ -102,10 +133,6 @@ public class SatchelArmorItem extends ArmorItem implements GeoItem {
     public static IItemHandler getItemHandler(ItemStack stack) {
         return stack.getCapability(ForgeCapabilities.ITEM_HANDLER)
                 .orElse(null);
-    }
-
-    public ICurio getCurio(ItemStack stack) {
-        return new SatchelCurioWrapperItem(stack);
     }
 
     public static class SatchelItemHandler extends ItemStackHandler {

@@ -2,6 +2,7 @@ package com.abysslasea.scoutreforked.InventorySlot;
 
 import com.abysslasea.scoutreforked.DynamicSatchelSlot;
 import com.abysslasea.scoutreforked.item.SatchelArmorItem;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
@@ -33,6 +34,23 @@ public abstract class InventoryMenuMixin extends AbstractContainerMenu {
     @Inject(method = "<init>(Lnet/minecraft/world/entity/player/Inventory;ZLnet/minecraft/world/entity/player/Player;)V",
             at = @At("TAIL"))
     private void addSatchelSlots(Inventory playerInventory, boolean active, Player player, CallbackInfo ci) {
+        if (player instanceof ServerPlayer serverPlayer) {
+            if (serverPlayer.gameMode == null) {
+                return;
+            }
+            if (player.isCreative()) {
+                return;
+            }
+        } else {
+            try {
+                if (player.isCreative()) {
+                    return;
+                }
+            } catch (Exception e) {
+                return;
+            }
+        }
+
         this.currentPlayer = player;
 
         ItemStack chestStack = player.getItemBySlot(EquipmentSlot.CHEST);
@@ -65,4 +83,3 @@ public abstract class InventoryMenuMixin extends AbstractContainerMenu {
         playerSatchelSlotStartIndexMap.remove(player);
     }
 }
-

@@ -1,51 +1,76 @@
 package com.abysslasea.scoutreforked.Curio;
 
-import com.abysslasea.scoutreforked.item.SatchelArmorItem;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.fml.ModList;
 import top.theillusivec4.curios.api.SlotContext;
 import top.theillusivec4.curios.api.type.capability.ICurio;
 
-import java.util.stream.IntStream;
+import java.lang.reflect.Method;
 
 public class SatchelCurioWrapperItem implements ICurio {
+
     private final ItemStack stack;
+    private final Object curiosWrapper;
 
     public SatchelCurioWrapperItem(ItemStack stack) {
         this.stack = stack;
+        this.curiosWrapper = createCuriosWrapper(stack);
     }
 
-    /**
-     * 只要玩家在胸甲槽或任何 Curios 槽已有一个 SatchelArmorItem，就禁止再次装备。
-     */
+    private Object createCuriosWrapper(ItemStack stack) {
+        if (!ModList.get().isLoaded("curios")) return null;
+        try {
+            Class<?> clazz = Class.forName("com.abysslasea.scoutreforked.Curio.internal.SatchelCurioWrapperItemImpl");
+            return clazz.getConstructor(ItemStack.class).newInstance(stack);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     @Override
     public boolean canEquip(SlotContext context) {
-        LivingEntity entity = context.entity();
-
-        // 1. 胸甲槽检查
-        ItemStack chest = entity.getItemBySlot(EquipmentSlot.CHEST);
-        if (chest.getItem() instanceof SatchelArmorItem) {
-            return false;
+        if (curiosWrapper == null) return true; // 无Curios时默认允许
+        try {
+            Method canEquipMethod = curiosWrapper.getClass().getMethod("canEquip", SlotContext.class);
+            return (boolean) canEquipMethod.invoke(curiosWrapper, context);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return true;
         }
-
-        // 2. Curios 插槽检查
-        return entity.getCapability(top.theillusivec4.curios.api.CuriosCapability.INVENTORY)
-                .map(curios -> curios.getCurios().values().stream()
-                        .flatMap(handler -> {
-                            var stacks = handler.getStacks();
-                            return IntStream.range(0, stacks.getSlots())
-                                    .mapToObj(stacks::getStackInSlot);
-                        })
-                        // 过滤掉当前这只“正要装备”的挎包
-                        .filter(s -> !s.isEmpty() && s != this.stack)
-                        // 确保其余插槽没有任何 SatchelArmorItem
-                        .noneMatch(s -> s.getItem() instanceof SatchelArmorItem)
-                ).orElse(true);
     }
 
     @Override
     public ItemStack getStack() {
-        return this.stack;
+        return stack;
+    }
+    @Override
+    public void curioTick(SlotContext slotContext) {
+        if (curiosWrapper == null) return;
+        try {
+            Method method = curiosWrapper.getClass().getMethod("curioTick", SlotContext.class);
+            method.invoke(curiosWrapper, slotContext);
+        } catch (Exception e) {
+        }
+    }
+
+    @Override
+    public void onEquip(SlotContext slotContext, ItemStack prevStack) {
+        if (curiosWrapper == null) return;
+        try {
+            Method method = curiosWrapper.getClass().getMethod("onEquip", SlotContext.class, ItemStack.class);
+            method.invoke(curiosWrapper, slotContext, prevStack);
+        } catch (Exception e) {
+        }
+    }
+
+    @Override
+    public void onUnequip(SlotContext slotContext, ItemStack newStack) {
+        if (curiosWrapper == null) return;
+        try {
+            Method method = curiosWrapper.getClass().getMethod("onUnequip", SlotContext.class, ItemStack.class);
+            method.invoke(curiosWrapper, slotContext, newStack);
+        } catch (Exception e) {
+        }
     }
 }
