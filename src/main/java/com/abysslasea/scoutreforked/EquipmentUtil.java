@@ -1,4 +1,4 @@
-package com.abysslasea.scoutreforked.InventorySlot;
+package com.abysslasea.scoutreforked;
 
 import com.abysslasea.scoutreforked.Curio.CuriosCompat;
 import com.abysslasea.scoutreforked.item.SatchelArmorItem;
