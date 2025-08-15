@@ -1,21 +1,19 @@
-package com.abysslasea.scoutreforked.InventorySlot;
+package com.abysslasea.scoutreforked.gui.mixin;
 
-import com.abysslasea.scoutreforked.DynamicSatchelSlot;
-import com.abysslasea.scoutreforked.item.SatchelArmorItem;
+import com.abysslasea.scoutreforked.gui.DynamicSatchelSlot;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.inventory.MenuType;
-import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -34,44 +32,44 @@ public abstract class InventoryMenuMixin extends AbstractContainerMenu {
     @Inject(method = "<init>(Lnet/minecraft/world/entity/player/Inventory;ZLnet/minecraft/world/entity/player/Player;)V",
             at = @At("TAIL"))
     private void addSatchelSlots(Inventory playerInventory, boolean active, Player player, CallbackInfo ci) {
-        if (player instanceof ServerPlayer serverPlayer) {
-            if (serverPlayer.gameMode == null) {
+        try {
+            if (isCreativeMode(player)) {
                 return;
             }
-            if (player.isCreative()) {
-                return;
+
+            this.currentPlayer = player;
+
+            IItemHandler fallbackHandler = new ItemStackHandler(9);
+
+            int baseX = 8;
+            int baseY = 171;
+            int spacing = 18;
+            int slots = 9;
+
+            satchelSlotsStartIndex = this.slots.size();
+            playerSatchelSlotStartIndexMap.put(player, satchelSlotsStartIndex);
+
+            for (int i = 0; i < slots; i++) {
+                int x = baseX + i * spacing;
+                int y = baseY;
+                this.addSlot(new DynamicSatchelSlot(fallbackHandler, player, i, x, y));
             }
-        } else {
-            try {
-                if (player.isCreative()) {
-                    return;
+        } catch (Exception e) {
+        }
+    }
+
+    private boolean isCreativeMode(Player player) {
+        try {
+            if (player instanceof ServerPlayer serverPlayer) {
+                if (serverPlayer.gameMode == null) {
+                    return false;
                 }
-            } catch (Exception e) {
-                return;
+                return player.isCreative();
+            } else {
+                return player.isCreative();
             }
-        }
-
-        this.currentPlayer = player;
-
-        ItemStack chestStack = player.getItemBySlot(EquipmentSlot.CHEST);
-        IItemHandler satchelHandler = SatchelArmorItem.getItemHandler(chestStack);
-
-        if (satchelHandler == null) {
-            satchelHandler = new ItemStackHandler(9);
-        }
-
-        int baseX = 8;
-        int baseY = 171;
-        int spacing = 18;
-        int slots = 9;
-
-        satchelSlotsStartIndex = this.slots.size();
-        playerSatchelSlotStartIndexMap.put(player, satchelSlotsStartIndex);
-
-        for (int i = 0; i < slots; i++) {
-            int x = baseX + i * spacing;
-            int y = baseY;
-            this.addSlot(new DynamicSatchelSlot(satchelHandler, player, i, x, y));
+        } catch (Exception e) {
+            return false;
         }
     }
 

@@ -1,5 +1,6 @@
-package com.abysslasea.scoutreforked;
+package com.abysslasea.scoutreforked.registry;
 
+import com.abysslasea.scoutreforked.ScoutreForked;
 import com.abysslasea.scoutreforked.item.ModItems;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;

@@ -1,6 +1,9 @@
 package com.abysslasea.scoutreforked;
 
+import com.abysslasea.scoutreforked.event.SatchelEventHandler;
+import com.abysslasea.scoutreforked.integration.Curio.CuriosIntegration;
 import com.abysslasea.scoutreforked.item.ModItems;
+import com.abysslasea.scoutreforked.registry.ModCreativeModTabs;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraftforge.common.MinecraftForge;
@@ -29,9 +32,16 @@ public class ScoutreForked {
         modEventBus.addListener(this::onCommonSetup);
 
         MinecraftForge.EVENT_BUS.register(this);
+        MinecraftForge.EVENT_BUS.register(SatchelEventHandler.class);
 
-        if (ModList.get().isLoaded("curios")) {
-            com.abysslasea.scoutreforked.Curio.CuriosCompat.init();
+        try {
+            boolean curiosLoaded = ModList.get().isLoaded("curios");
+
+            if (curiosLoaded) {
+                CuriosIntegration.init();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -39,10 +49,18 @@ public class ScoutreForked {
     }
 
     private void clientSetup(final FMLClientSetupEvent evt) {
-        if (ModList.get().isLoaded("curios")) {
-            EntityModelSet modelSet = Minecraft.getInstance().getEntityModels();
-            com.abysslasea.scoutreforked.Curio.CuriosCompat.clientInit(modelSet);
-        }
+        evt.enqueueWork(() -> {
+            try {
+                boolean curiosLoaded = ModList.get().isLoaded("curios");
+
+                if (curiosLoaded) {
+                    EntityModelSet modelSet = Minecraft.getInstance().getEntityModels();
+                    CuriosIntegration.clientInit(modelSet);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     private void addCreative(BuildCreativeModeTabContentsEvent event) {

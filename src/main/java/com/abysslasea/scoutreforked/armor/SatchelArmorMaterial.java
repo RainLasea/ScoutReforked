@@ -61,7 +61,7 @@ public enum SatchelArmorMaterial implements ArmorMaterial {
 
     @Override
     public String getName() {
-        return "scoutreforked:" + name;
+        return "minecraft:leather";
     }
 
     @Override
